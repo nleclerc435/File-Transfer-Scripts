@@ -3,8 +3,7 @@ import serverinfo
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-host = serverinfo.host
-port = serverinfo.port
+host, port = serverinfo.address
 s.bind((host, port))
 
 print('Server running at: {} | Port: {}\nWaiting for a connection...'.format(host, port))
