@@ -10,14 +10,10 @@ def send_file(path):
     with print_lock:
         print('Starting thread : {}\n'.format(current_thread().name))
     s = socket.socket()
-    host = serverinfo.host
-    port = serverinfo.port
+    host, port = serverinfo.address
     s.connect((host,port))
     print(s.recv(1024).decode())
-
-    print(path)
-    filename = path.split('\\')[-1]
-    print(filename)
+    filename = os.path.basename(path)
     f = open(path, 'rb')
     s.send(filename.encode())
     l = f.read(1024)
@@ -29,67 +25,74 @@ def send_file(path):
     with print_lock:
         print('Finished thread : {}\n'.format(current_thread().name))
 
+
 def worker(q, item):
     while True:
         q.get()
         send_file(item)
         q.task_done()
 
-action = input('Do you want to send separate files(s) or files from a single directory(d)?\n')
-if action == 's':
-    
-    num = int(input('How many files do you want to transfer?\n'))
-    path_list = []
-    while True:
-        if num > 0 :
-            for n in range(num):
-                while True:
-                    path = input('Please, enter the full path of the file you wish to send: \n').strip('\"')   
-                    if os.path.exists(path):
-                        size = os.path.getsize(path)
-                        print(size)
-                        path_list.append(path)
-                        print(path_list)
-                        break
-                    else:
-                        print('Path not found! Are you sure you wrote the right path?')
-                        continue
-            break
-        else:
-            print('You entered 0. Please enter a valid number.')
-            continue
+
+while True:
+    action = input('Do you want to send separate files(s) or files from a single directory(d)?\n')
+    if action == 's':
         
-    print(path_list)
+        num = int(input('How many files do you want to transfer?\n'))
+        path_list = []
+        while True:
+            if num > 0 :
+                for n in range(num):
+                    while True:
+                        path = input('Please, enter the full path of the file you wish to send: \n').strip('\"')   
+                        if os.path.exists(path):
+                            size = os.path.getsize(path)
+                            print(size)
+                            path_list.append(path)
+                            print(path_list)
+                            break
+                        else:
+                            print('Path not found! Are you sure you wrote the right path?')
+                            continue
+                break
+            else:
+                print('You entered 0. Please enter a valid number.')
+                continue
+        
+            
+        print(path_list)
 
-    q = Queue()
+        q = Queue()
 
-    for item in path_list:
-        w = Thread(target=worker, args=(q,item))
-        w.daemon = True
-        w.start()
+        for item in path_list:
+            w = Thread(target=worker, args=(q,item))
+            w.daemon = True
+            w.start()
 
-    for i in range(len(path_list)):
-        q.put(i)
-    q.join()
+        for i in range(len(path_list)):
+            q.put(i)
+        q.join()
+        break
 
 
 
-elif action == 'd':
-    path = input('Please enter the path for your folder:\n')   
-    file_list = [item for item in os.listdir(path) if os.path.isfile(item)]
-    file_list.remove('client.py')
-    print(file_list)
+    elif action == 'd':
+        path = input('Please enter the path for your folder:\n')   
+        file_list = [item for item in os.listdir(path) if os.path.isfile(item)]
+        file_list.remove('client.py')
+        print(file_list)
 
-    q = Queue()
+        q = Queue()
 
-    for item in file_list:
-        w = Thread(target=worker, args=(q,item))
-        w.daemon = True
-        w.start()
+        for item in file_list:
+            w = Thread(target=worker, args=(q,item))
+            w.daemon = True
+            w.start()
 
-    for i in range(len(file_list)):
-        q.put(i)
-    q.join()
+        for i in range(len(file_list)):
+            q.put(i)
+        q.join()
+        break
 
-else:
-    pass
+    else:
+        print('Command not recognized. Please use "s"(separate files) or "d"(directory).')
+        continue
