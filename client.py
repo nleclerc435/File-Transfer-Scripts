@@ -10,8 +10,7 @@ def send_file(path):
     with print_lock:
         print('Starting thread : {}\n'.format(current_thread().name))
     s = socket.socket()
-    host, port = serverinfo.address
-    s.connect((host,port))
+    s.connect((serverinfo.address[0],serverinfo.address[1]))
     print(s.recv(1024).decode())
     filename = os.path.basename(path)
     f = open(path, 'rb')
