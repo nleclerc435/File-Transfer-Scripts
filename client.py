@@ -31,15 +31,24 @@ def worker(q, item):
         send_file(item)
         q.task_done()
 
+def thread_start(list, queue):
+    for item in list:
+        w = Thread(target=worker, args=(q, item))
+        w.daemon = True
+        w.start()
+
+    for i in range(len(list)):
+        queue.put(i)
+
 
 while True:
     action = input('Do you want to send separate files(s) or files from a single directory(d)?\n')
     if action == 's':
-        
+
         num = int(input('How many files do you want to transfer?\n'))
         path_list = []
         while True:
-            if num > 0 :
+            if num > 0:
                 for n in range(num):
                     while True:
                         path = input('Please, enter the full path of the file you wish to send: \n').strip('\"')   
@@ -56,19 +65,12 @@ while True:
             else:
                 print('You entered 0. Please enter a valid number.')
                 continue
-        
-            
+
+
         print(path_list)
 
         q = Queue()
-
-        for item in path_list:
-            w = Thread(target=worker, args=(q,item))
-            w.daemon = True
-            w.start()
-
-        for i in range(len(path_list)):
-            q.put(i)
+        thread_start(path_list, q)
         q.join()
         break
 
@@ -79,16 +81,8 @@ while True:
         file_list = [item for item in os.listdir(path) if os.path.isfile(item)]
         file_list.remove('client.py')
         print(file_list)
-
         q = Queue()
-
-        for item in file_list:
-            w = Thread(target=worker, args=(q,item))
-            w.daemon = True
-            w.start()
-
-        for i in range(len(file_list)):
-            q.put(i)
+        thread_start(file_list, q)
         q.join()
         break
 
