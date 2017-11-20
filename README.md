@@ -34,9 +34,7 @@ for multiple paths, the user will be asked to enter the single directory and the
 them to a list.
 
 #### More detail
-Queue/Workers - Workers will get their 'task' from the queue given to it in the arguments and the use the send_file function to the the item
-also given in the arguments when it is called.
+- Queue/Workers - Workers will get their 'task' from the queue given to it in the arguments and use the send_file function with the item
+also given to them in the arguments when they are called.
 
-Threads - For each item in a list, a new Thread is created and given the worker function as a target. The argument given to that worker will be
-the queue used at that time and the item coming from the list. The function will then start the thread and start populating the queue for the
-amount of files to be sent.
+- Threads - For each item in a list, a new Thread is created and given the worker function as a target. The argument given to that worker will be the queue used at that time and the item coming from the list. The function will then start the thread and start populating the queue for the amount of files to be sent.
