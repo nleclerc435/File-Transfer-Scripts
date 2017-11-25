@@ -1,26 +1,44 @@
 import socket
 import serverinfo
+import threading
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def run():
+    while True:
+        c, addr = s.accept()
+        with print_lock:
+            print('Got connection from:\n', addr)
+        clients_list.append(c)
+        c.send('Connected to: {} | {}'.format(serverinfo.address[0],serverinfo.address[1]).encode())
+        t = threading.Thread(target=receive_file, args=(c,))
+        t.start()
 
-s.bind((serverinfo.address))
-
-print('Server running at: {} | Port: {}\nWaiting for a connection...'.format(serverinfo.address[0],serverinfo.address[1]))
-
-s.listen(5)
-
-while True:
-    c, addr = s.accept()
-    print('Got connection from:', addr)
-    c.send('Connected to: {} | {}'.format(serverinfo.address[0],serverinfo.address[1]).encode())
-    filename = c.recv(1024).decode()
+def receive_file(client):
+    filename = client.recv(1024).decode()
     with open('/home/pi/MyTransferedFiles/'+filename, 'wb') as f:
-        print('Receiving: '+filename)
+        with print_lock:
+            print('Receiving: \n'+filename)
         while True:
-            l = c.recv(1024)
+            l = client.recv(1024)
             if not l:
                 break
             f.write(l)
-
+    with print_lock:
+        print('{} was transfered successfully!'.format(filename))
     f.close()
-    c.close()
+    clients_list.remove(client)
+    client.close()
+
+#List of clients connecting to server
+clients_list = []
+
+#Print lock
+print_lock = threading.Lock()
+
+#Server socket creation
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind((serverinfo.address))
+s.listen(5)
+print('Server running at: {} | Port: {}\nWaiting for a connection...'.format(serverinfo.address[0],serverinfo.address[1]))
+
+#Start waiting for client connection        
+run()
