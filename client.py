@@ -79,7 +79,6 @@ while True:
     elif action == 'd':
         path = input('Please enter the path for your folder:\n')   
         file_list = [item for item in os.listdir(path) if os.path.isfile(item)]
-        file_list.remove('client.py')
         print(file_list)
         q = Queue()
         thread_start(file_list, q)
