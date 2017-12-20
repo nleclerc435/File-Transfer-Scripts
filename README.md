@@ -1,4 +1,10 @@
 # File-Transfer-Scripts
+
+## Update
+- I've started working on a PyQt5/GUI version of the tool. You can find the script in the GUI folder. Everything below applies to the console scripts and I will update the documentation once the design for the GUI version is decided.
+
+----
+## Description
 Basic server/client scripts to transfer files quickly between my PC and my Raspberry Pi
 
 I needed a solution to send small files from my PC to my Rapsberry Pi without using my email or a cloud service everytime. I decided to try
