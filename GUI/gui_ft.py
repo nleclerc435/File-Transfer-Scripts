@@ -1,17 +1,30 @@
 import sys
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QApplication, QWidget, QPushButton, QFileDialog, QMainWindow, QAction, qApp, QListWidget, QLabel, QTextEdit, QDialog, QLineEdit
+from PyQt5.QtWidgets import QCheckBox, QVBoxLayout, QHBoxLayout, QApplication, QWidget, QPushButton, QFileDialog, QMainWindow, QAction, qApp, QListWidget, QLabel, QTextEdit, QDialog, QLineEdit
 from PyQt5.QtGui import QStandardItemModel
+from PyQt5.QtCore import pyqtSignal
 import os
+import json
 
 
 
 class FileSender(QMainWindow):
+
+    ip = ''
+    port = ''
+
     def __init__(self):
         super().__init__()
         self.list_box = ListBox()
-        self.list_box2 = ListBox()
         self.setCentralWidget(self.list_box)
         self.connect_dialog = ConnectDialog()
+        self.connect_dialog.tar_info.connect(self.get_info)
+        if os.path.exists('target_info.json'):
+            with open('target_info.json') as j_data:
+                data = json.load(j_data)
+            self.target_ip = data['ip']
+            self.target_port = data['port']
+            self.list_box.status_lbl.setText(f'IP: {self.target_ip} \nPort: {self.target_port}')
+            print(f'IP: {self.target_ip} \nPort: {self.target_port}')
         self.init_ui()
 
 
@@ -29,15 +42,26 @@ class FileSender(QMainWindow):
     def connect(self):
         self.connect_dialog.exec_()
 
+    def get_info(self, data):
+        print('get_info called')
+        split_data = data.split('|')
+        self.ip = split_data[0]
+        self.port = split_data[1]
+        self.list_box.status_lbl.setText(f'IP: {self.ip} \nPort: {self.port}')
+        print(self.list_box.status_lbl.text())
+
 
 class ListBox(QWidget):
+
+    filenames = []
+
     def __init__(self):
         super(ListBox, self).__init__()
         self.layout = QHBoxLayout()
         self.v_layout1 = QVBoxLayout()
         self.v_layout2 = QVBoxLayout()
 
-        self.status_lbl = QLabel('Status: Not connected')
+        self.status_lbl = QLabel('No Target.\nUse File->Connect to enter a target.')
 
         add_btn = QPushButton('Add files')
         add_btn.clicked.connect(self.open_dialog)
@@ -45,6 +69,7 @@ class ListBox(QWidget):
         self.fts_box = QListWidget()
 
         send_btn = QPushButton('Send')
+        send_btn.clicked.connect(self.send_files)
         lbl2 = QLabel('Files sent')
         sent_box = QListWidget()
 
@@ -63,14 +88,21 @@ class ListBox(QWidget):
         self.setLayout(self.layout)
 
     def open_dialog(self):
-        filenames = QFileDialog.getOpenFileNames(self, 'Open File', os.getenv('HOME'))
-        if len(filenames) > 0:
-            for filename in filenames[0]:
+        self.filenames = QFileDialog.getOpenFileNames(self, 'Open File', os.getenv('HOME'))
+        if len(self.filenames) > 0:
+            for filename in self.filenames[0]:
                 print(filename)
                 self.fts_box.addItem(os.path.basename(filename))
+
+    def send_files(self):
+        print(self.filenames[0])
+
         
 
 class ConnectDialog(QDialog):
+    
+    tar_info = pyqtSignal(str)
+
     def __init__(self):
         super(ConnectDialog, self).__init__()
         self.ip_box = QLineEdit()
@@ -80,6 +112,9 @@ class ConnectDialog(QDialog):
         self.port_lbl = QLabel('Port: ')
 
         self.conn_btn = QPushButton('Connect')
+        self.conn_btn.clicked.connect(self.register_target)
+
+        self.save_check = QCheckBox('Save info for later')
 
         self.box_layout1 = QHBoxLayout()
         self.box_layout1.addWidget(self.ip_lbl)
@@ -92,12 +127,24 @@ class ConnectDialog(QDialog):
         self.layout = QVBoxLayout()
         self.layout.addLayout(self.box_layout1)
         self.layout.addLayout(self.box_layout2)
+        self.layout.addWidget(self.save_check)
         self.layout.addWidget(self.conn_btn)
         self.setLayout(self.layout)
 
         self.setWindowTitle('Connect')
 
+    def register_target(self):
+        if self.ip_box.text() and self.port_box.text():
+            target_info = {'ip':str(self.ip_box.text()), 'port':str(self.port_box.text())}
+            self.tar_info.emit(target_info['ip'] + '|' + target_info['port'])
+            if self.save_check.isChecked():
+                with open('target_info.json', 'w') as j:
+                    json.dump(target_info, j)
+            print(target_info)
+            self.close()
 
-app = QApplication(sys.argv)
-file_sender = FileSender()
-sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    file_sender = FileSender()
+    sys.exit(app.exec_())
