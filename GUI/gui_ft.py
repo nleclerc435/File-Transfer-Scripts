@@ -21,10 +21,10 @@ class FileSender(QMainWindow):
         if os.path.exists('target_info.json'):
             with open('target_info.json') as j_data:
                 data = json.load(j_data)
-            self.target_ip = data['ip']
-            self.target_port = data['port']
-            self.list_box.status_lbl.setText(f'IP: {self.target_ip} \nPort: {self.target_port}')
-            print(f'IP: {self.target_ip} \nPort: {self.target_port}')
+            self.ip = data['ip']
+            self.port = data['port']
+            self.list_box.status_lbl.setText(f'IP: {self.ip} \nPort: {self.port}')
+            print(f'IP: {self.ip} \nPort: {self.port}')
         self.init_ui()
 
 
