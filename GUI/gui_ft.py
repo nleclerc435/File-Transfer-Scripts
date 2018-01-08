@@ -47,8 +47,8 @@ class FileSender(QMainWindow):
     def get_info(self, data):
         split_data = data.split('|')
         self.ip = split_data[0]
-        self.port = split_data[1]
-        self.list_box.status_lbl.setText(f'IP: {self.ip} \nPort: {self.port}')
+        self.port = int(split_data[1])
+        self.list_box.status_lbl.setText(f'IP: {self.ip} \nPort: {str(self.port)}')
 
     def open_dialog(self):
         self.filenames = QFileDialog.getOpenFileNames(self, 'Open File', os.getenv('HOME'))
